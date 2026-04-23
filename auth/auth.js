@@ -1,12 +1,11 @@
 const firebaseConfig = {
-    apiKey: "AIzaSyBosn42LCdgC47R7fNj4AaVsFxaz2OxItI",
-    authDomain: "r3fire.firebaseapp.com",
-    databaseURL: "https://r3fire.firebaseio.com",
-    projectId: "r3fire",
-    storageBucket: "r3fire.appspot.com",
-    messagingSenderId: "8089151908",
-    appId: "1:8089151908:web:939bb0805ad93a3e513931",
-    measurementId: "G-JL55RRJCDY"
+    apiKey: "AIzaSyCqAMTg0-umGnGNLkc3DTQGsOxEKfE2Oyk",
+    authDomain: "anime-lecongphu.firebaseapp.com",
+    databaseURL: "https://anime-lecongphu-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "anime-lecongphu",
+    storageBucket: "anime-lecongphu.firebasestorage.app",
+    messagingSenderId: "139811848603",
+    appId: "1:139811848603:web:8e25ef42ef411be1a6213e"
 };
 
 const app = firebase.initializeApp(firebaseConfig);

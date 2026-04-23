@@ -155,7 +155,7 @@
 
 
         const id = getUrlParameter('id')
-        const playlistUrl = `https://r3fire.firebaseio.com/anime/${id}.json`
+        const playlistUrl = `https://anime-lecongphu-default-rtdb.asia-southeast1.firebasedatabase.app/anime/${id}.json`
         fetch(playlistUrl).then(response => response.json()).then(setupPlayer)
 
         var episodeList = [];

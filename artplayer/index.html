@@ -148,7 +148,7 @@
         const k = getUrlParameter('k')
 
         if (id) {
-            const url = `https://r3fire.firebaseio.com/anime/${id}.json`
+            const url = `https://anime-lecongphu-default-rtdb.asia-southeast1.firebasedatabase.app/anime/${id}.json`
             fetch(url).then(response => response.json()).then(setupPlayer)
         } else if (k) {
             const url = "https://phimapi.com/phim/" + k

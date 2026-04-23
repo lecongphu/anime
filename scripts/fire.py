@@ -1,3 +1,5 @@
+import os
+
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
@@ -5,10 +7,14 @@ from tqdm.auto import tqdm
 from anilist import get_anilist_crunchyroll
 from jikan import get_anime_video
 
-DB_URL = "https://r3fire.firebaseio.com"
+DB_URL = "https://anime-lecongphu-default-rtdb.asia-southeast1.firebasedatabase.app"
+SERVICE_ACCOUNT_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT", "anime-lecongphu.json")
 
-cred = credentials.Certificate("r3fire.json")
-firebase_admin.initialize_app(cred, {"databaseURL": DB_URL})
+if os.path.exists(SERVICE_ACCOUNT_PATH):
+    cred = credentials.Certificate(SERVICE_ACCOUNT_PATH)
+    firebase_admin.initialize_app(cred, {"databaseURL": DB_URL})
+else:
+    firebase_admin.initialize_app(options={"databaseURL": DB_URL})
 
 
 def update_ep(title, m3u8_data, fire_path):
