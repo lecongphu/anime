@@ -465,6 +465,46 @@
             color: var(--danger);
         }
 
+        .pagination-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 26px auto 0;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: var(--panel);
+            width: fit-content;
+            max-width: 100%;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.26);
+        }
+
+        .pagination-row[hidden] {
+            display: none !important;
+        }
+
+        .page-button {
+            min-height: 40px;
+            padding: 0 16px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 800;
+        }
+
+        .page-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.46;
+        }
+
+        .page-info {
+            color: var(--muted-strong);
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
         .external-overlay {
             position: fixed;
             inset: 0;
@@ -584,6 +624,15 @@
                 width: 100%;
             }
 
+            .pagination-row {
+                width: 100%;
+                border-radius: 18px;
+            }
+
+            .page-button {
+                flex: 1 1 0;
+            }
+
             .image-container {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 10px;
@@ -685,6 +734,11 @@
                 <p>Vui lòng chờ trong giây lát.</p>
             </div>
             <div class="image-container" id="imageContainer" hidden></div>
+            <div class="pagination-row" id="paginationContainer" hidden>
+                <button class="page-button" id="prevSearchPageBtn" type="button">Trang trước</button>
+                <span class="page-info" id="searchPageInfo">Trang 1/1</span>
+                <button class="page-button" id="nextSearchPageBtn" type="button">Trang sau</button>
+            </div>
         </main>
     </div>
 
@@ -715,11 +769,16 @@
             const SHEET_GID = '1193967919';
             const CACHE_TTL_MS = 15 * 60 * 1000;
             const CARD_EPISODE_PAGE_SIZE = 18;
+            const ANIME_SEARCH_PAGE_SIZE = 10;
             const authUrl = '/anime/auth/';
             const imageContainer = document.getElementById('imageContainer');
             const statusPanel = document.getElementById('status-panel');
             const sourcePill = document.getElementById('source-pill');
             const resultCount = document.getElementById('result-count');
+            const paginationContainer = document.getElementById('paginationContainer');
+            const prevSearchPageBtn = document.getElementById('prevSearchPageBtn');
+            const nextSearchPageBtn = document.getElementById('nextSearchPageBtn');
+            const searchPageInfo = document.getElementById('searchPageInfo');
             const avatarBtn = document.getElementById('user-avatar-btn');
             const userMenu = document.getElementById('user-menu');
             const filterContainer = document.getElementById('filter-container');
@@ -742,6 +801,8 @@
                 images: [],
                 mode: 'catalog',
                 loading: false,
+                pagination: null,
+                query: '',
             };
 
             function getUrlParameter(name) {
@@ -754,6 +815,73 @@
                     .replace(/[\u0300-\u036f]/g, '')
                     .toLowerCase()
                     .trim();
+            }
+
+            function normalizeAnimeSearchQuery(value = '') {
+                return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+            }
+
+            function normalizeAnimeSearchPage(value = 1) {
+                const parsed = Math.floor(Number(value || 1) || 1);
+                return Math.max(1, parsed);
+            }
+
+            function normalizeAnimeSearchPageSize(value = ANIME_SEARCH_PAGE_SIZE) {
+                const parsed = Math.floor(Number(value || ANIME_SEARCH_PAGE_SIZE) || ANIME_SEARCH_PAGE_SIZE);
+                return Math.max(1, Math.min(ANIME_SEARCH_PAGE_SIZE, parsed));
+            }
+
+            function normalizeAnimePagination(rawPagination = {}, requestedPage = 1, requestedLimit = ANIME_SEARCH_PAGE_SIZE, itemCount = 0) {
+                const pageSize = normalizeAnimeSearchPageSize(rawPagination?.totalItemsPerPage || requestedLimit);
+                const totalItems = Math.max(0, Math.floor(Number(rawPagination?.totalItems || itemCount || 0) || 0));
+                const derivedTotalPages = Math.ceil(Math.max(totalItems, Number(itemCount || 0) || 0) / pageSize);
+                const totalPages = Math.max(1, Math.floor(Number(rawPagination?.totalPages || derivedTotalPages || 1) || 1));
+                const currentPage = Math.max(1, Math.min(totalPages, Math.floor(Number(rawPagination?.currentPage || requestedPage || 1) || 1)));
+                return {
+                    totalItems: totalItems || Math.max(0, Number(itemCount || 0) || 0),
+                    pageSize,
+                    currentPage,
+                    totalPages,
+                    hasPrev: currentPage > 1,
+                    hasNext: currentPage < totalPages,
+                    offset: (currentPage - 1) * pageSize,
+                };
+            }
+
+            function buildAnimeSearchApiUrl(query, page = 1, limit = ANIME_SEARCH_PAGE_SIZE) {
+                const url = new URL('https://phimapi.com/v1/api/tim-kiem');
+                url.searchParams.set('keyword', normalizeAnimeSearchQuery(query));
+                url.searchParams.set('page', String(normalizeAnimeSearchPage(page)));
+                url.searchParams.set('limit', String(normalizeAnimeSearchPageSize(limit)));
+                url.searchParams.set('sort_field', 'year');
+                url.searchParams.set('sort_order', 'desc');
+                return url.toString();
+            }
+
+            function buildAnimeImageUrl(baseUrl = '', source = '') {
+                const normalizedSource = String(source || '').trim();
+                if (!normalizedSource) return '';
+                if (/^https?:\/\//i.test(normalizedSource)) return normalizedSource;
+                const normalizedBase = String(baseUrl || 'https://phimimg.com').trim().replace(/\/+$/, '');
+                return normalizedBase ? `${normalizedBase}/${normalizedSource.replace(/^\/+/, '')}` : normalizedSource;
+            }
+
+            function buildAnimeResultTitle(item) {
+                const name = String(item?.name || '').trim();
+                const originName = String(item?.originName || item?.origin_name || '').trim();
+                if (!name) return originName || 'Anime';
+                if (!originName || normalizeText(originName) === normalizeText(name)) return name;
+                return `${name} / ${originName}`;
+            }
+
+            function buildAnimeResultMeta(item) {
+                const parts = [];
+                const year = Number(item?.year || 0);
+                if (year > 0) parts.push(String(year));
+                if (item?.episode_current) parts.push(String(item.episode_current).trim());
+                if (item?.quality) parts.push(String(item.quality).trim());
+                if (item?.lang) parts.push(String(item.lang).trim());
+                return parts.filter(Boolean).join(' • ');
             }
 
             function readCache(key) {
@@ -777,6 +905,7 @@
             function setStatus(type, title, detail = '') {
                 statusPanel.hidden = false;
                 imageContainer.hidden = true;
+                paginationContainer.hidden = true;
                 statusPanel.innerHTML = type === 'loading'
                     ? '<div class="loader" aria-hidden="true"></div>'
                     : '';
@@ -794,6 +923,18 @@
             function showGrid() {
                 statusPanel.hidden = true;
                 imageContainer.hidden = false;
+            }
+
+            function renderSearchPagination() {
+                const pagination = state.mode === 'search' ? state.pagination : null;
+                if (!pagination || pagination.totalPages <= 1) {
+                    paginationContainer.hidden = true;
+                    return;
+                }
+                paginationContainer.hidden = false;
+                prevSearchPageBtn.disabled = !pagination.hasPrev;
+                nextSearchPageBtn.disabled = !pagination.hasNext;
+                searchPageInfo.textContent = `Trang ${pagination.currentPage}/${pagination.totalPages}`;
             }
 
             async function fetchText(url, timeoutMs = 15000) {
@@ -1081,7 +1222,7 @@
                 const left = document.createElement('span');
                 left.textContent = image.category || 'Anime';
                 const right = document.createElement('span');
-                right.textContent = [image.year, image.season].filter(Boolean).join(' • ') || image.status || '';
+                right.textContent = image.meta || [image.year, image.season].filter(Boolean).join(' • ') || image.status || '';
                 meta.append(left, right);
 
                 animeCard.append(epBox, link, meta);
@@ -1102,8 +1243,14 @@
                     return matchesFilters && matchesLocalSearch;
                 });
 
-                filteredImages = filteredImages.sort((a, b) => String(b.status || '').localeCompare(String(a.status || '')));
-                resultCount.textContent = `${filteredImages.length.toLocaleString('vi-VN')} phim`;
+                if (state.mode === 'catalog') {
+                    filteredImages = filteredImages.sort((a, b) => String(b.status || '').localeCompare(String(a.status || '')));
+                    resultCount.textContent = `${filteredImages.length.toLocaleString('vi-VN')} phim`;
+                } else {
+                    const pagination = state.pagination || normalizeAnimePagination({}, 1, ANIME_SEARCH_PAGE_SIZE, filteredImages.length);
+                    const totalItems = Math.max(0, Number(pagination.totalItems || filteredImages.length || 0) || 0);
+                    resultCount.textContent = `Trang ${pagination.currentPage}/${pagination.totalPages} • ${totalItems.toLocaleString('vi-VN')} kết quả`;
+                }
 
                 if (!filteredImages.length) {
                     setStatus('empty', 'Không có anime phù hợp', 'Thử đổi bộ lọc hoặc tìm bằng từ khóa khác.');
@@ -1116,31 +1263,56 @@
                 });
                 imageContainer.appendChild(fragment);
                 showGrid();
+                renderSearchPagination();
             }
 
-            async function searchAnime(query) {
-                const normalizedQuery = String(query || '').trim();
-                if (normalizedQuery.length < 2) return [];
-                const cacheKey = `anime-search:${normalizedQuery.toLowerCase()}`;
+            async function searchAnime(query, page = 1) {
+                const normalizedQuery = normalizeAnimeSearchQuery(query);
+                const safePage = normalizeAnimeSearchPage(page);
+                const safeLimit = normalizeAnimeSearchPageSize(ANIME_SEARCH_PAGE_SIZE);
+                if (normalizedQuery.length < 2) {
+                    return {
+                        items: [],
+                        pagination: normalizeAnimePagination({}, safePage, safeLimit, 0),
+                    };
+                }
+                const cacheKey = `anime-search:${normalizedQuery.toLowerCase()}:${safePage}`;
                 const cached = readCache(cacheKey);
                 if (cached) return cached;
 
-                const data = await fetchJson(`https://phimapi.com/v1/api/tim-kiem?keyword=${encodeURIComponent(normalizedQuery)}&page=1&limit=64&sort_field=year&sort_order=desc`);
-                const cdn = String(data?.data?.APP_DOMAIN_CDN_IMAGE || 'https://phimimg.com').replace(/\/+$/, '');
-                const items = (data?.data?.items || []).map((item) => {
-                    const poster = item.poster_url || item.thumb_url || '';
+                const payload = await fetchJson(buildAnimeSearchApiUrl(normalizedQuery, safePage, safeLimit));
+                const data = payload?.data || {};
+                const cdn = String(data?.APP_DOMAIN_CDN_IMAGE || 'https://phimimg.com').trim();
+                const rawItems = Array.isArray(data?.items) ? data.items : [];
+                const pagination = normalizeAnimePagination(data?.params?.pagination || {}, safePage, safeLimit, rawItems.length);
+                const mapped = rawItems.map((item) => {
+                    const slug = String(item?.slug || '').trim();
+                    const title = buildAnimeResultTitle(item);
                     return {
-                        id: item._id || item.slug,
-                        name: item.origin_name && item.name ? `${item.name} / ${item.origin_name}` : (item.name || item.origin_name || 'Anime'),
-                        image: /^https?:\/\//i.test(poster) ? poster : `${cdn}/${poster.replace(/^\/+/, '')}`,
-                        category: item.type || 'phimapi',
-                        year: String(item.year || ''),
-                        phimapi: item.slug || '',
-                        status: item.episode_current || '',
+                        id: item?._id || slug,
+                        name: title,
+                        image: buildAnimeImageUrl(cdn, item?.poster_url || item?.thumb_url),
+                        category: String(item?.type || 'phimapi').trim().toLowerCase(),
+                        year: String(item?.year || ''),
+                        phimapi: slug,
+                        status: String(item?.episode_current || '').trim(),
+                        meta: buildAnimeResultMeta(item),
+                        episodeCurrent: String(item?.episode_current || '').trim(),
+                        quality: String(item?.quality || '').trim(),
+                        lang: String(item?.lang || '').trim(),
                     };
                 }).filter((item) => item.phimapi);
-                writeCache(cacheKey, items);
-                return items;
+                const deduped = [];
+                const seen = new Set();
+                for (const item of mapped) {
+                    if (seen.has(item.phimapi)) continue;
+                    seen.add(item.phimapi);
+                    deduped.push(item);
+                    if (deduped.length >= ANIME_SEARCH_PAGE_SIZE) break;
+                }
+                const result = { items: deduped, pagination };
+                writeCache(cacheKey, result);
+                return result;
             }
 
             async function initData(options = {}) {
@@ -1148,16 +1320,22 @@
                 state.loading = true;
                 setStatus('loading', 'Đang tải thư viện anime', 'Vui lòng chờ trong giây lát.');
                 try {
-                    const query = getUrlParameter('q').trim();
+                    const query = normalizeAnimeSearchQuery(getUrlParameter('q'));
+                    const page = normalizeAnimeSearchPage(getUrlParameter('page') || 1);
                     clearSearchBtn.hidden = !query;
                     if (query) {
                         state.mode = 'search';
+                        state.query = query;
                         searchInput.value = query;
                         filterContainer.hidden = true;
-                        sourcePill.textContent = `Kết quả tìm kiếm: ${query}`;
-                        state.images = await searchAnime(query);
+                        const result = await searchAnime(query, page);
+                        state.images = result.items;
+                        state.pagination = result.pagination;
+                        sourcePill.textContent = `Tìm kiếm PhimAPI: ${query}`;
                     } else {
                         state.mode = 'catalog';
+                        state.query = '';
+                        state.pagination = null;
                         filterContainer.hidden = false;
                         sourcePill.textContent = 'Thư viện chọn lọc';
                         state.images = await fetchImageData(Boolean(options.forceRefresh));
@@ -1176,10 +1354,20 @@
             function updateQueryParam(query) {
                 const url = new URL(window.location.href);
                 if (query) {
-                    url.searchParams.set('q', query);
+                    url.searchParams.set('q', normalizeAnimeSearchQuery(query));
                 } else {
                     url.searchParams.delete('q');
                 }
+                url.searchParams.delete('page');
+                window.history.replaceState({}, '', url);
+            }
+
+            function updateSearchPage(page) {
+                const query = normalizeAnimeSearchQuery(searchInput.value || state.query);
+                if (!query) return;
+                const url = new URL(window.location.href);
+                url.searchParams.set('q', query);
+                url.searchParams.set('page', String(normalizeAnimeSearchPage(page)));
                 window.history.replaceState({}, '', url);
             }
 
@@ -1202,6 +1390,19 @@
             });
             refreshBtn.addEventListener('click', async () => {
                 await initData({ forceRefresh: true });
+            });
+            prevSearchPageBtn.addEventListener('click', async () => {
+                const currentPage = normalizeAnimeSearchPage(state.pagination?.currentPage || 1);
+                if (currentPage <= 1) return;
+                updateSearchPage(currentPage - 1);
+                await initData();
+            });
+            nextSearchPageBtn.addEventListener('click', async () => {
+                const currentPage = normalizeAnimeSearchPage(state.pagination?.currentPage || 1);
+                const totalPages = Math.max(1, Number(state.pagination?.totalPages || 1) || 1);
+                if (currentPage >= totalPages) return;
+                updateSearchPage(currentPage + 1);
+                await initData();
             });
             closeExternalOverlay.addEventListener('click', closeOverlay);
             externalOverlay.addEventListener('click', (event) => {
