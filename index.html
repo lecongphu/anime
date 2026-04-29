@@ -319,6 +319,10 @@
             text-decoration: none;
         }
 
+        .poster-link.no-card-link {
+            cursor: default;
+        }
+
         .poster-frame {
             position: relative;
             aspect-ratio: 300 / 424;
@@ -848,17 +852,22 @@
             function buildCardUrl(image) {
                 if (image.phimapi) return `/anime/artplayer/?k=${encodeURIComponent(image.phimapi)}`;
                 if (image.playlist) return `/anime/artplayer/?id=${encodeURIComponent(image.playlist)}`;
-                return image.url || '';
+                return '';
             }
 
             function createAnimeCard(image, history, index) {
                 const animeCard = document.createElement('article');
                 animeCard.className = 'anime-card';
 
-                const link = document.createElement('a');
-                link.className = 'poster-link';
                 const cardUrl = buildCardUrl(image);
-                if (cardUrl) link.href = getAnimeUrl(cardUrl);
+                const link = document.createElement(cardUrl ? 'a' : 'div');
+                link.className = 'poster-link';
+                if (cardUrl) {
+                    link.href = getAnimeUrl(cardUrl);
+                } else {
+                    link.classList.add('no-card-link');
+                    link.title = 'Chọn tập phía trên để xem. Phim này chưa có trang chi tiết nội bộ.';
+                }
 
                 const posterFrame = document.createElement('div');
                 posterFrame.className = 'poster-frame';
