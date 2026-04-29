@@ -1,624 +1,1050 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime</title>
+    <meta name="theme-color" content="#080d13">
+    <meta name="description" content="Tân Liên Hoa Anime - tìm và xem anime nhanh trên web.">
+    <title>Tân Liên Hoa Anime</title>
     <link rel="apple-touch-icon" href="/anime/image/r3_512.png">
     <link rel="icon" type="image/png" href="/anime/image/r3_512.png">
-    <meta property="og:image" content="/anime/image/r3.png">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="canonical" href="https://tanlienhoa.com/anime/">
+    <meta property="og:image" content="https://tanlienhoa.com/anime/image/r3.png">
+    <meta property="og:title" content="Tân Liên Hoa Anime">
+    <meta property="og:description" content="Tìm, lọc và xem anime nhanh.">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://docs.google.com">
+    <link rel="preconnect" href="https://phimapi.com">
+    <link rel="preconnect" href="https://phimimg.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --bg: #080d13;
+            --bg-soft: #0d1520;
+            --panel: rgba(15, 24, 36, 0.86);
+            --panel-strong: rgba(20, 31, 45, 0.94);
+            --line: rgba(179, 199, 224, 0.16);
+            --line-strong: rgba(179, 199, 224, 0.28);
+            --text: #f4f8ff;
+            --muted: #9db0c8;
+            --muted-strong: #c8d6e8;
+            --accent: #44d7b6;
+            --accent-2: #69b7ff;
+            --danger: #ff7b91;
+            --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+            --radius: 24px;
+            --card-w: 218px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            background: var(--bg);
+        }
+
         body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            /* justify-content: center; */
-            align-items: center;
             min-height: 100vh;
-            font-family: Arial, sans-serif;
+            margin: 0;
+            color: var(--text);
+            font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 18% -8%, rgba(68, 215, 182, 0.22), transparent 28rem),
+                radial-gradient(circle at 92% 2%, rgba(105, 183, 255, 0.24), transparent 30rem),
+                linear-gradient(180deg, #0b111a 0%, #080d13 42%, #0b1118 100%);
+            overflow-x: hidden;
         }
 
-        #filter-container {
-            margin: 20px;
-            display: none;
-            gap: 10px;
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+            background-size: 34px 34px;
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 88%);
         }
 
-        .image-container {
+        a {
+            color: inherit;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        .page-shell {
+            width: min(1480px, 100%);
+            margin: 0 auto;
+            padding: 24px clamp(14px, 3vw, 36px) 48px;
+        }
+
+        .hero {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: grid;
+            gap: 18px;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(15, 24, 36, 0.94), rgba(9, 15, 23, 0.82));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .hero-top,
+        .toolbar,
+        .filter-row,
+        .user-menu,
+        .stats-row {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
             align-items: center;
-            padding: 20px;
+            gap: 12px;
         }
 
-        .img-thumbnail {
-            width: 300px;
-            height: 424px;
-            border-radius: 8px;
-            padding: 0px;
-            border: 0px;
+        .hero-top {
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            object-fit: cover;
+            box-shadow: 0 16px 34px rgba(68, 215, 182, 0.18);
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(1.35rem, 3vw, 2.35rem);
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+
+        .brand p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .user-menu {
+            position: relative;
+            justify-content: flex-end;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--line-strong);
+            border-radius: 50%;
+            background: var(--panel-strong);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            display: block;
             object-fit: cover;
         }
 
-        .img-thumbnail:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        .avatar-dropdown {
+            position: absolute;
+            top: 54px;
+            right: 0;
+            min-width: 184px;
+            display: none;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: var(--panel-strong);
+            box-shadow: var(--shadow);
         }
 
-        .form-select {
-            width: auto;
+        .avatar-dropdown.show {
+            display: grid;
+            gap: 6px;
+        }
+
+        .avatar-dropdown button {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            color: var(--text);
+            background: transparent;
+            text-align: left;
+        }
+
+        .avatar-dropdown button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .toolbar {
+            flex-wrap: wrap;
+        }
+
+        .search-form {
+            display: flex;
+            flex: 1 1 360px;
+            gap: 10px;
+        }
+
+        .search-form input,
+        .filter-row select {
+            min-height: 46px;
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(4, 9, 15, 0.72);
+            outline: none;
+        }
+
+        .search-form input {
+            width: 100%;
+            padding: 0 18px;
+        }
+
+        .filter-row select {
+            min-width: 154px;
+            padding: 0 14px;
+            color-scheme: dark;
+        }
+
+        .search-form input:focus,
+        .filter-row select:focus {
+            border-color: rgba(105, 183, 255, 0.78);
+            box-shadow: 0 0 0 4px rgba(105, 183, 255, 0.16);
+        }
+
+        .primary-button,
+        .ghost-button {
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 999px;
+            color: #061016;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            font-weight: 800;
+            box-shadow: 0 14px 28px rgba(68, 215, 182, 0.18);
+        }
+
+        .ghost-button {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: none;
+            border: 1px solid var(--line);
+        }
+
+        .filter-row {
+            flex-wrap: wrap;
+        }
+
+        .stats-row {
+            justify-content: space-between;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .source-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 32px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--muted-strong);
+            background: rgba(255, 255, 255, 0.06);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .main-area {
+            padding-top: 22px;
+        }
+
+        .image-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--card-w)), 1fr));
+            gap: clamp(14px, 2vw, 22px);
+            align-items: start;
         }
 
         .anime-card {
             position: relative;
-            display: inline-block;
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: var(--panel);
+            box-shadow: 0 16px 44px rgba(0, 0, 0, 0.28);
+            transform: translateZ(0);
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
 
-        .anime-ep-box {
-            position: absolute;
-            align-items: center;
-            justify-content: center;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            z-index: 2;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2px;
+        .anime-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(105, 183, 255, 0.42);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
         }
 
-        .anime-ep {
-            flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-            cursor: pointer;
+        .poster-link {
+            display: block;
+            color: inherit;
             text-decoration: none;
         }
 
-        .anime-ep-text {
-            font-weight: bold;
-            font-size: 14px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-            color: #ffffff;
+        .poster-frame {
+            position: relative;
+            aspect-ratio: 300 / 424;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(68, 215, 182, 0.12), rgba(105, 183, 255, 0.12));
+        }
+
+        .img-thumbnail {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border: 0;
+            object-fit: cover;
+            transform: scale(1.01);
+            transition: transform 0.24s ease, filter 0.24s ease;
+        }
+
+        .anime-card:hover .img-thumbnail {
+            transform: scale(1.055);
+            filter: saturate(1.08);
         }
 
         .anime-name-label {
             position: absolute;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.5);
-            text-align: center;
-            padding: 6px 8px 4px 8px;
-            max-width: 100%;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
+            bottom: 0;
+            z-index: 3;
+            min-height: 76px;
+            display: flex;
+            align-items: flex-end;
+            padding: 36px 14px 12px;
+            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.86));
+            color: var(--text);
+            font-weight: 800;
+            line-height: 1.18;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.76);
         }
 
-        .user-avatar {
-            right: 12px;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: #333;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
-            display: none;
+        .anime-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px 12px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .anime-ep-box {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 4;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .anime-ep {
+            min-width: 34px;
+            height: 34px;
+            padding: 0 9px;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            cursor: pointer;
-            transition: box-shadow 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(6, 12, 19, 0.72);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+            text-decoration: none;
+            pointer-events: auto;
         }
 
-        .user-avatar:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+        .anime-ep:hover {
+            background: rgba(68, 215, 182, 0.22);
+            border-color: rgba(68, 215, 182, 0.44);
         }
 
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-            display: block;
+        .anime-ep-text {
+            color: inherit;
+            font-size: 0.78rem;
+            font-weight: 800;
         }
 
-        .avatar-dropdown {
-            position: absolute;
-            top: 63px;
-            background: #222;
-            border-radius: 8px;
-            min-width: 120px;
-            z-index: 1100;
-            display: none;
-            flex-direction: column;
-            align-items: stretch;
+        .anime-ep-text.watched {
+            color: #70c4ff;
         }
 
-        .avatar-dropdown.show {
-            display: flex;
-        }
-
-        .avatar-dropdown button {
-            background: none;
-            border: none;
-            color: #fff;
-            padding: 10px 20px;
+        .status-panel {
+            margin: 64px auto 0;
+            width: min(520px, 100%);
+            display: grid;
+            place-items: center;
+            gap: 14px;
+            padding: 30px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: var(--panel);
+            color: var(--muted);
             text-align: center;
-            width: 100%;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 8px;
-            transition: background 0.2s;
+            box-shadow: var(--shadow);
         }
 
-        .avatar-dropdown button:hover {
-            border-radius: 8px;
-            background: #444;
-        }
-
-
-        #search-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #search-input {
-            display: none;
-            transition: all 0.3s ease;
-        }
-
-        .search-btn {
-            border: 1px solid #6c757d;
-            color: #fff;
+        .loader {
+            width: 44px;
+            height: 44px;
+            border: 4px solid rgba(255, 255, 255, 0.14);
+            border-top-color: var(--accent);
             border-radius: 50%;
-            padding: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
+            animation: spin 0.84s linear infinite;
         }
 
-        .search-btn:hover {
-            background: #cad3db;
+        .empty-title {
+            margin: 0;
+            color: var(--text);
+            font-size: 1.08rem;
+            font-weight: 800;
+        }
+
+        .error-text {
+            color: var(--danger);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 720px) {
+            .page-shell {
+                padding: 12px 10px 34px;
+            }
+
+            .hero {
+                position: relative;
+                padding: 14px;
+            }
+
+            .hero-top {
+                align-items: flex-start;
+            }
+
+            .brand-logo {
+                width: 46px;
+                height: 46px;
+                border-radius: 14px;
+            }
+
+            .brand p {
+                display: none;
+            }
+
+            .search-form,
+            .search-form input,
+            .search-form button,
+            .filter-row select,
+            .ghost-button {
+                flex: 1 1 100%;
+                width: 100%;
+            }
+
+            .image-container {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .anime-name-label {
+                min-height: 68px;
+                padding: 30px 10px 10px;
+                font-size: 0.82rem;
+            }
+
+            .anime-meta {
+                font-size: 0.66rem;
+            }
+
+            .anime-ep {
+                min-width: 30px;
+                height: 30px;
+                padding: 0 8px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 1ms !important;
+                transition-duration: 1ms !important;
+                scroll-behavior: auto !important;
+            }
         }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
+    <script defer src="/anime/auth/auth.js"></script>
 </head>
 
 <body>
-    <div id="filter-container">
-        <select id="categoryFilter" class="form-select">
-            <option value="">All Categories</option>
-        </select>
-        <select id="yearFilter" class="form-select">
-            <option value="">All Years</option>
-        </select>
-        <select id="seasonFilter" class="form-select" style="display: none;">
-            <option value="">All Seasons</option>
-        </select>
-        <div id="search-container">
-            <input type="text" id="search-input" class="form-control" placeholder="Search anime...">
-            <button class="search-btn" id="searchBtn">
-                <img width="28px" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'
-                    %3E%3Cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'
-                    d='M15.796 15.811 21 21m-3-10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z' /%3E%3C/svg%3E"
-                    alt="Search">
-            </button>
-        </div>
-        <div class="user-avatar" title="User" id="user-avatar-btn">
-            <img id="user-avatar" alt="User Avatar">
-            <div class="avatar-dropdown" id="avatarDropdown">
-                <button id="signOutBtnDropdown">Sign Out</button>
+    <div class="page-shell">
+        <header class="hero">
+            <div class="hero-top">
+                <div class="brand">
+                    <img class="brand-logo" src="/anime/image/r3_512.png" width="52" height="52" alt="R3 Anime">
+                    <div>
+                        <h1>Tân Liên Hoa Anime</h1>
+                        <p>Lọc nhanh, tìm nhanh, mở player nhanh hơn.</p>
+                    </div>
+                </div>
+                <div class="user-menu" id="user-menu" hidden>
+                    <button class="user-avatar" id="user-avatar-btn" type="button" aria-haspopup="true" aria-expanded="false" title="Tài khoản">
+                        <img id="user-avatar" alt="Ảnh đại diện">
+                    </button>
+                    <div class="avatar-dropdown" id="avatarDropdown">
+                        <button id="signOutBtnDropdown" type="button">Đăng xuất</button>
+                    </div>
+                </div>
             </div>
-        </div>
 
+            <form class="toolbar" id="search-form" role="search">
+                <div class="search-form">
+                    <input type="search" id="search-input" autocomplete="off" placeholder="Tìm anime theo tên, ví dụ: Naruto, One Piece...">
+                    <button class="primary-button" type="submit">Tìm</button>
+                </div>
+                <button class="ghost-button" id="clearSearchBtn" type="button" hidden>Xóa tìm kiếm</button>
+            </form>
+
+            <div class="filter-row" id="filter-container" hidden>
+                <select id="categoryFilter" aria-label="Lọc theo danh mục"></select>
+                <select id="yearFilter" aria-label="Lọc theo năm"></select>
+                <select id="seasonFilter" aria-label="Lọc theo mùa" hidden></select>
+                <button class="ghost-button" id="refreshBtn" type="button">Làm mới dữ liệu</button>
+            </div>
+
+            <div class="stats-row">
+                <span class="source-pill" id="source-pill">Đang tải</span>
+                <span id="result-count">0 phim</span>
+            </div>
+        </header>
+
+        <main class="main-area">
+            <div class="status-panel" id="status-panel">
+                <div class="loader" aria-hidden="true"></div>
+                <p class="empty-title">Đang tải thư viện anime</p>
+                <p>Vui lòng chờ trong giây lát.</p>
+            </div>
+            <div class="image-container" id="imageContainer" hidden></div>
+        </main>
     </div>
-    <div class="image-container" id="imageContainer"></div>
 
-    <script src="/anime/auth/auth.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
     <script>
-        const imageContainer = document.getElementById('imageContainer');
-        var images = []
+        window.addEventListener('DOMContentLoaded', () => {
+            const SHEET_ID = '12q04f4hwtVQjfVSUayDsgXLGGbqrl9urm8gp556nPQA';
+            const SHEET_GID = '1193967919';
+            const CACHE_TTL_MS = 15 * 60 * 1000;
+            const CARD_EPISODE_PAGE_SIZE = 18;
+            const authUrl = '/anime/auth/';
+            const imageContainer = document.getElementById('imageContainer');
+            const statusPanel = document.getElementById('status-panel');
+            const sourcePill = document.getElementById('source-pill');
+            const resultCount = document.getElementById('result-count');
+            const avatarBtn = document.getElementById('user-avatar-btn');
+            const userMenu = document.getElementById('user-menu');
+            const filterContainer = document.getElementById('filter-container');
+            const userAvatar = document.getElementById('user-avatar');
+            const avatarDropdown = document.getElementById('avatarDropdown');
+            const selectedCategory = document.getElementById('categoryFilter');
+            const selectedYear = document.getElementById('yearFilter');
+            const selectedSeason = document.getElementById('seasonFilter');
+            const searchForm = document.getElementById('search-form');
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clearSearchBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
 
-        async function fetchImageData(id, gid) {
-            var url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&tq&gid=${gid}`;
+            const state = {
+                images: [],
+                mode: 'catalog',
+                loading: false,
+            };
 
-            res = await fetch(url)
-            txt = await res.text()
-
-            var jsonString = txt.match(/(?<="table":).*(?=}\);)/g)[0]
-            var data = JSON.parse(jsonString)
-
-            var cols = data.cols.map(colonne => colonne.label)
-            var table = data.rows.map(r => {
-                return r.c.map(cel => {
-                    try {
-                        var value = cel.f ? cel.f : cel.v
-                    } catch (e) {
-                        var value = ''
-                    }
-                    return value
-                })
-            })
-            images = table.map(row => {
-                var image = {}
-                cols.map((col, i) => {
-                    image[col] = row[i]
-                })
-                return image
-            })
-            // console.log(images)
-
-            return images
-        }
-
-        function populateFilters(sYear = null, sCate = "TV Show", sSeason = "") {
-            var categories = new Set();
-            var years = new Set();
-            var seasons = new Set();
-
-            images.map(image => {
-                categories.add(image.category);
-                years.add(image.year);
-                seasons.add(image.season);
-            });
-
-            categories = Array.from(categories).sort()
-            years = Array.from(years).sort().reverse()
-            seasons = Array.from(seasons).sort()
-
-            const categoryFilter = document.getElementById('categoryFilter');
-            categories.map(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category;
-                if (category == sCate) {
-                    option.selected = true;
-                }
-                categoryFilter.appendChild(option);
-            });
-
-            const yearFilter = document.getElementById('yearFilter');
-            years.map((year, i) => {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                if (sYear == null) {
-                    var currentYear = new Date().getFullYear();
-                    if (i == 0 && parseInt(year) <= currentYear) {
-                        console.log(i, parseInt(year), currentYear)
-                        option.selected = true;
-                    }
-                } else {
-                    if (year == sYear) {
-                        option.selected = true;
-                    }
-                }
-                yearFilter.appendChild(option);
-            });
-
-            const seasonFilter = document.getElementById('seasonFilter');
-            seasons.map(season => {
-                const option = document.createElement('option');
-                option.value = season;
-                option.textContent = season;
-                if (season == sSeason) {
-                    option.selected = true;
-                }
-                seasonFilter.appendChild(option);
-            });
-        }
-
-
-        function getAnimeUrl(url) {
-            if (url.match(/(m3u8|mp4|json)/)) {
-                return "player/#" + url;
-            } else if (url.includes("facebook")) {
-                return "fb/?v=" + url.split("=")[1]
-            } else if (url.includes("youtube")) {
-                return "yt/?" + url.split("?")[1]
-            } else if (!url.includes("http")) {
-                return url;
-            } else if (url.includes("rophim")) {
-                return url;
-            } else {
-                return "frame/#" + url;
+            function getUrlParameter(name) {
+                return new URLSearchParams(window.location.search).get(name) || '';
             }
-        }
 
-        function renderEpisodesPage(epBox, episodes, page, history) {
-            const PAGE_SIZE = 54;
-            epBox.innerHTML = "";
-            let start = page * PAGE_SIZE;
-            let end = start + PAGE_SIZE;
-            let pageEpisodes = episodes.slice(start, end);
-            const totalPages = Math.ceil(episodes.length / PAGE_SIZE);
+            function normalizeText(value) {
+                return String(value || '')
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .trim();
+            }
 
-            if (totalPages > 1) {
-                if (page > 0 && page < totalPages - 1) {
-                    pageEpisodes = [["❮❮", null], ...episodes.slice(start - 1, end - 1), ["❯❯", null]];
-                } else if (page === 0 && totalPages > 1) {
-                    if (episodes.length > PAGE_SIZE) {
-                        pageEpisodes = [...episodes.slice(start, end - 1), ["❯❯", null]];
-                    }
-                } else if (page === totalPages - 1 && page > 0) {
-                    pageEpisodes = [["❮❮", null], ...episodes.slice(start - 1, end)];
+            function readCache(key) {
+                try {
+                    const record = JSON.parse(sessionStorage.getItem(key) || 'null');
+                    if (!record || Date.now() - Number(record.savedAt || 0) > CACHE_TTL_MS) return null;
+                    return record.value;
+                } catch {
+                    return null;
                 }
             }
 
-            for (const [idx, url] of pageEpisodes) {
-                let o = document.createElement('a');
-                o.classList.add('anime-ep');
-                if (idx === "❮❮") {
-                    o.textContent = "❮❮";
-                    o.onclick = () => {
-                        page = Math.max(0, page - 1);
-                        renderEpisodesPage(epBox, episodes, page, history);
-                    };
-                } else if (idx === "❯❯") {
-                    o.textContent = "❯❯";
-                    o.onclick = () => {
-                        page = Math.min(totalPages - 1, page + 1);
-                        renderEpisodesPage(epBox, episodes, page, history);
-                    };
-                } else {
+            function writeCache(key, value) {
+                try {
+                    sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), value }));
+                } catch {
+                    // Cache is an optimization only.
+                }
+            }
+
+            function setStatus(type, title, detail = '') {
+                statusPanel.hidden = false;
+                imageContainer.hidden = true;
+                statusPanel.innerHTML = type === 'loading'
+                    ? '<div class="loader" aria-hidden="true"></div>'
+                    : '';
+                const titleNode = document.createElement('p');
+                titleNode.className = type === 'error' ? 'empty-title error-text' : 'empty-title';
+                titleNode.textContent = title;
+                statusPanel.appendChild(titleNode);
+                if (detail) {
+                    const detailNode = document.createElement('p');
+                    detailNode.textContent = detail;
+                    statusPanel.appendChild(detailNode);
+                }
+            }
+
+            function showGrid() {
+                statusPanel.hidden = true;
+                imageContainer.hidden = false;
+            }
+
+            async function fetchText(url, timeoutMs = 15000) {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                    const response = await fetch(url, { signal: controller.signal });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.text();
+                } finally {
+                    clearTimeout(timer);
+                }
+            }
+
+            async function fetchJson(url, timeoutMs = 15000) {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                    const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } finally {
+                    clearTimeout(timer);
+                }
+            }
+
+            async function fetchImageData(forceRefresh = false) {
+                const cacheKey = `anime-sheet:${SHEET_ID}:${SHEET_GID}`;
+                if (!forceRefresh) {
+                    const cached = readCache(cacheKey);
+                    if (cached) return cached;
+                }
+
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq&gid=${SHEET_GID}`;
+                const text = await fetchText(url);
+                const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?/);
+                const jsonString = match ? match[1] : text.match(/(?<="table":).*(?=}\);)/s)?.[0];
+                const data = match ? JSON.parse(jsonString) : { table: JSON.parse(jsonString) };
+                const cols = (data.table?.cols || []).map((col) => String(col.label || '').trim());
+                const rows = (data.table?.rows || []).map((row) => {
+                    const image = {};
+                    (row.c || []).forEach((cell, index) => {
+                        image[cols[index] || `col_${index}`] = cell ? String(cell.f || cell.v || '').trim() : '';
+                    });
+                    return image;
+                });
+                writeCache(cacheKey, rows);
+                return rows;
+            }
+
+            function resetSelect(select, placeholder) {
+                select.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = placeholder;
+                select.appendChild(option);
+            }
+
+            function populateFilters(defaultYear = null, defaultCategory = 'TV Show', defaultSeason = '') {
+                const currentCategory = selectedCategory.value || defaultCategory;
+                const currentYear = selectedYear.value || defaultYear;
+                const currentSeason = selectedSeason.value || defaultSeason;
+                const categories = [...new Set(state.images.map((image) => image.category).filter(Boolean))].sort();
+                const years = [...new Set(state.images.map((image) => image.year).filter(Boolean))].sort().reverse();
+                const seasons = [...new Set(state.images.map((image) => image.season).filter(Boolean))].sort();
+                const currentCalendarYear = new Date().getFullYear();
+
+                resetSelect(selectedCategory, 'Tất cả thể loại');
+                resetSelect(selectedYear, 'Tất cả năm');
+                resetSelect(selectedSeason, 'Tất cả mùa');
+
+                categories.forEach((category) => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    option.selected = category === currentCategory;
+                    selectedCategory.appendChild(option);
+                });
+
+                years.forEach((year, index) => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    if (currentYear) {
+                        option.selected = year === currentYear;
+                    } else if (index === 0 && parseInt(year, 10) <= currentCalendarYear) {
+                        option.selected = true;
+                    }
+                    selectedYear.appendChild(option);
+                });
+
+                seasons.forEach((season) => {
+                    const option = document.createElement('option');
+                    option.value = season;
+                    option.textContent = season;
+                    option.selected = season === currentSeason;
+                    selectedSeason.appendChild(option);
+                });
+
+                selectedSeason.hidden = seasons.length < 2;
+            }
+
+            function getAnimeUrl(url) {
+                const raw = String(url || '').trim();
+                if (!raw) return '#';
+                if (/\.(m3u8|mp4|json)(\?|#|$)/i.test(raw)) return `/anime/player/#${raw}`;
+                if (raw.includes('facebook')) return `/anime/fb/?v=${encodeURIComponent(raw.split('=').pop() || raw)}`;
+                if (raw.includes('youtube') && raw.includes('?')) return `/anime/yt/?${raw.split('?')[1]}`;
+                if (!/^https?:\/\//i.test(raw)) return raw;
+                if (raw.includes('rophim')) return raw;
+                return `/anime/frame/#${raw}`;
+            }
+
+            function parseEpisodes(value) {
+                return String(value || '')
+                    .split('\n')
+                    .map((item) => item.trim())
+                    .filter(Boolean)
+                    .map((item) => {
+                        const parts = item.split(':');
+                        return [parts.shift().trim(), parts.join(':').trim()];
+                    })
+                    .filter(([episode]) => episode);
+            }
+
+            function renderEpisodesPage(epBox, episodes, page, history) {
+                epBox.innerHTML = '';
+                const totalPages = Math.max(1, Math.ceil(episodes.length / CARD_EPISODE_PAGE_SIZE));
+                const safePage = Math.max(0, Math.min(totalPages - 1, page));
+                const start = safePage * CARD_EPISODE_PAGE_SIZE;
+                const pageEpisodes = episodes.slice(start, start + CARD_EPISODE_PAGE_SIZE);
+
+                if (safePage > 0) {
+                    epBox.appendChild(createEpisodePagerButton('‹', () => renderEpisodesPage(epBox, episodes, safePage - 1, history)));
+                }
+
+                pageEpisodes.forEach(([idx, url]) => {
+                    const link = document.createElement('a');
+                    link.className = 'anime-ep';
                     if (url) {
-                        o.href = getAnimeUrl(url)
-                        o.target = "_blank";
+                        link.href = getAnimeUrl(url);
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
                     }
                     const epText = document.createElement('span');
-                    epText.classList.add('anime-ep-text');
+                    epText.className = `anime-ep-text${url && history[url] ? ' watched' : ''}`;
                     epText.textContent = idx;
-                    if (url in history) {
-                        epText.style.color = "#0d6efd";
-                    }
+                    link.appendChild(epText);
+                    epBox.appendChild(link);
+                });
 
-                    o.appendChild(epText);
+                if (safePage < totalPages - 1) {
+                    epBox.appendChild(createEpisodePagerButton('›', () => renderEpisodesPage(epBox, episodes, safePage + 1, history)));
                 }
-                epBox.appendChild(o);
-            }
-        }
-
-        function createAnimeCard(image, history) {
-            const animeCard = document.createElement('div');
-            animeCard.classList.add('anime-card');
-
-            const link = document.createElement('a');
-
-            var url = image.url
-
-            if (image.phimapi) {
-                url = `/anime/artplayer/?k=${image.phimapi}`
-            } else if (image.playlist) {
-                url = `/anime/artplayer/?id=${image.playlist}`
             }
 
-            if (url) {
-                link.href = getAnimeUrl(url)
-            }
-            // link.target = "_blank";
-
-            const img = document.createElement('img');
-            img.src = image.image || "/anime/image/lazy.png";
-            img.classList.add('img-thumbnail');
-
-            link.appendChild(img);
-
-            const epBox = document.createElement('div');
-            epBox.classList.add('anime-ep-box');
-
-            if (image.episodes) {
-                try {
-                    const episodes = image.episodes
-                        .split("\n")
-                        .map(e => e.trim())
-                        .filter(e => e)
-                        .map(e => {
-                            s = e.split(":");
-                            ep = s[0].trim();
-                            url = s.slice(1).join(":").trim();
-                            return [ep, url];
-                        })
-
-                    console.log("Episodes:", episodes.length)
-                    renderEpisodesPage(epBox, episodes, 0, history);
-                } catch (e) {
-                    console.log(e)
-                }
-            } else if (image.ep) {
-                const epContainer = document.createElement('a');
-                epContainer.classList.add('anime-ep');
-
-                const epText = document.createElement('span');
-                epText.classList.add('anime-ep-text');
-                epText.textContent = image.ep;
-
-                epContainer.appendChild(epText);
-                epBox.appendChild(epContainer);
+            function createEpisodePagerButton(label, onClick) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'anime-ep';
+                button.textContent = label;
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onClick();
+                });
+                return button;
             }
 
-            if (image.name) {
+            function buildCardUrl(image) {
+                if (image.phimapi) return `/anime/artplayer/?k=${encodeURIComponent(image.phimapi)}`;
+                if (image.playlist) return `/anime/artplayer/?id=${encodeURIComponent(image.playlist)}`;
+                return image.url || '';
+            }
+
+            function createAnimeCard(image, history, index) {
+                const animeCard = document.createElement('article');
+                animeCard.className = 'anime-card';
+
+                const link = document.createElement('a');
+                link.className = 'poster-link';
+                const cardUrl = buildCardUrl(image);
+                if (cardUrl) link.href = getAnimeUrl(cardUrl);
+
+                const posterFrame = document.createElement('div');
+                posterFrame.className = 'poster-frame';
+
+                const img = document.createElement('img');
+                img.src = image.image || '/anime/image/lazy.png';
+                img.alt = image.name || 'Anime poster';
+                img.width = 300;
+                img.height = 424;
+                img.decoding = 'async';
+                img.loading = index < 8 ? 'eager' : 'lazy';
+                if (index === 0) img.fetchPriority = 'high';
+                img.className = 'img-thumbnail';
+                img.onerror = () => {
+                    img.onerror = null;
+                    img.src = '/anime/image/lazy.png';
+                };
+
                 const nameLabel = document.createElement('div');
-                nameLabel.classList.add('anime-name-label');
-                nameLabel.textContent = image.name;
-                animeCard.appendChild(nameLabel);
+                nameLabel.className = 'anime-name-label';
+                nameLabel.textContent = image.name || 'Anime';
+
+                posterFrame.appendChild(img);
+                posterFrame.appendChild(nameLabel);
+                link.appendChild(posterFrame);
+
+                const epBox = document.createElement('div');
+                epBox.className = 'anime-ep-box';
+                if (image.episodes) {
+                    const episodes = parseEpisodes(image.episodes);
+                    if (episodes.length) renderEpisodesPage(epBox, episodes, 0, history);
+                } else if (image.ep) {
+                    const badge = document.createElement('span');
+                    badge.className = 'anime-ep';
+                    const badgeText = document.createElement('span');
+                    badgeText.className = 'anime-ep-text';
+                    badgeText.textContent = image.ep;
+                    badge.appendChild(badgeText);
+                    epBox.appendChild(badge);
+                }
+
+                const meta = document.createElement('div');
+                meta.className = 'anime-meta';
+                const left = document.createElement('span');
+                left.textContent = image.category || 'Anime';
+                const right = document.createElement('span');
+                right.textContent = [image.year, image.season].filter(Boolean).join(' • ') || image.status || '';
+                meta.append(left, right);
+
+                animeCard.append(epBox, link, meta);
+                return animeCard;
             }
 
-            animeCard.appendChild(epBox);
-            animeCard.appendChild(link);
-
-            return animeCard
-        }
-
-        const authUrl = "/anime/auth"
-        const avatarBtn = document.getElementById('user-avatar-btn');
-        const filterContainer = document.getElementById('filter-container');
-        const userAvatar = document.getElementById('user-avatar');
-        const avatarDropdown = document.getElementById('avatarDropdown');
-        const selectedCategory = document.getElementById('categoryFilter');
-        const selectedYear = document.getElementById('yearFilter');
-        const selectedSeason = document.getElementById('seasonFilter');
-        const searchBtn = document.getElementById('searchBtn');
-        const searchInput = document.getElementById('search-input');
-
-
-        async function handleSearch() {
-            if (!searchInput.style.display || searchInput.style.display === "none") {
-                searchInput.style.width = selectedCategory.offsetWidth + selectedYear.offsetWidth + 10 + "px";
-                searchInput.style.display = "block";
-                selectedCategory.style.display = "none";
-                selectedYear.style.display = "none";
-                searchInput.focus();
-            } else {
-                const url = new URL(window.location.href);
-                url.searchParams.set('q', searchInput.value);
-                window.history.replaceState({}, '', url);
+            function displayImages() {
                 imageContainer.innerHTML = '';
+                const history = JSON.parse(localStorage.getItem('history') || '{}');
+                const localQuery = state.mode === 'catalog' ? normalizeText(searchInput.value) : '';
+                let filteredImages = state.images.filter((image) => {
+                    const matchesFilters = state.mode === 'search' || (
+                        (!selectedCategory.value || image.category === selectedCategory.value) &&
+                        (!selectedYear.value || image.year === selectedYear.value) &&
+                        (!selectedSeason.value || image.season === selectedSeason.value)
+                    );
+                    const matchesLocalSearch = !localQuery || normalizeText(`${image.name} ${image.category} ${image.year}`).includes(localQuery);
+                    return matchesFilters && matchesLocalSearch;
+                });
 
-                await initData()
+                filteredImages = filteredImages.sort((a, b) => String(b.status || '').localeCompare(String(a.status || '')));
+                resultCount.textContent = `${filteredImages.length.toLocaleString('vi-VN')} phim`;
 
-                searchInput.style.display = "none";
-                selectedCategory.style.display = "block";
-                selectedYear.style.display = "block";
-                searchInput.blur();
-
-            }
-        }
-
-        searchInput.addEventListener('keydown', async (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                await handleSearch()
-            }
-        });
-        searchBtn.addEventListener('click', async () => {
-            await handleSearch()
-        });
-
-        function displayImages() {
-            const imageContainer = document.getElementById('imageContainer');
-            imageContainer.innerHTML = '';
-            const history = JSON.parse(localStorage.getItem("history")) || {};
-
-            var filteredImages = images.filter(image => {
-                return (
-                    (!selectedCategory.value || image.category == selectedCategory.value) &&
-                    (!selectedYear.value || image.year == selectedYear.value) &&
-                    (!selectedSeason.value || image.season == selectedSeason.value)
-                );
-            });
-
-            // const q = getUrlParameter("q")
-            // if (q) {
-            //     filteredImages = filteredImages.filter(image => image.name.toLowerCase().includes(q.toLowerCase()))
-            // }
-
-            filteredImages = filteredImages.sort((a, b) => b.status.localeCompare(a.status))
-
-            console.log(filteredImages)
-
-            filteredImages.map(image => {
-                const animeCard = createAnimeCard(image, history)
-                imageContainer.appendChild(animeCard);
-            })
-        }
-
-        selectedCategory.addEventListener('change', displayImages);
-        selectedYear.addEventListener('change', displayImages);
-        selectedSeason.addEventListener('change', displayImages);
-
-        function getUrlParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
-
-        async function searchAnime(q) {
-            selectedCategory.value = ""
-            selectedYear.value = ""
-            selectedSeason.value = ""
-
-            const res = await fetch(`https://phimapi.com/v1/api/tim-kiem?keyword=${q}&page=1&limit=64&sort_field=year&sort_order=desc`)
-            const data = await res.json()
-            var items = data.data.items.map(item => {
-                return {
-                    id: item._id,
-                    name: item.origin_name,
-                    image: data.data.APP_DOMAIN_CDN_IMAGE + "/" + item.poster_url,
-                    category: item.type,
-                    year: item.year,
-                    phimapi: item.slug,
-                    status: ""
-                }
-            })
-
-            return items
-        }
-
-        async function initData() {
-            const q = getUrlParameter("q")
-            if (q) {
-                images = await searchAnime(q)
-                populateFilters("", "", "")
-
-            } else {
-                images = await fetchImageData('12q04f4hwtVQjfVSUayDsgXLGGbqrl9urm8gp556nPQA', "1193967919");
-                populateFilters()
-            }
-
-            displayImages()
-        }
-
-        window.addEventListener('load', async function () {
-            firebase.auth().onAuthStateChanged(async function (user) {
-                if (!user) {
-                    window.location.href = authUrl;
+                if (!filteredImages.length) {
+                    setStatus('empty', 'Không có anime phù hợp', 'Thử đổi bộ lọc hoặc tìm bằng từ khóa khác.');
+                    return;
                 }
 
-                console.log(user)
-                if (user.photoURL && window.location.hostname != "localhost") {
-                    userAvatar.src = user.photoURL;
+                const fragment = document.createDocumentFragment();
+                filteredImages.forEach((image, index) => {
+                    fragment.appendChild(createAnimeCard(image, history, index));
+                });
+                imageContainer.appendChild(fragment);
+                showGrid();
+            }
+
+            async function searchAnime(query) {
+                const normalizedQuery = String(query || '').trim();
+                if (normalizedQuery.length < 2) return [];
+                const cacheKey = `anime-search:${normalizedQuery.toLowerCase()}`;
+                const cached = readCache(cacheKey);
+                if (cached) return cached;
+
+                const data = await fetchJson(`https://phimapi.com/v1/api/tim-kiem?keyword=${encodeURIComponent(normalizedQuery)}&page=1&limit=64&sort_field=year&sort_order=desc`);
+                const cdn = String(data?.data?.APP_DOMAIN_CDN_IMAGE || 'https://phimimg.com').replace(/\/+$/, '');
+                const items = (data?.data?.items || []).map((item) => {
+                    const poster = item.poster_url || item.thumb_url || '';
+                    return {
+                        id: item._id || item.slug,
+                        name: item.origin_name && item.name ? `${item.name} / ${item.origin_name}` : (item.name || item.origin_name || 'Anime'),
+                        image: /^https?:\/\//i.test(poster) ? poster : `${cdn}/${poster.replace(/^\/+/, '')}`,
+                        category: item.type || 'phimapi',
+                        year: String(item.year || ''),
+                        phimapi: item.slug || '',
+                        status: item.episode_current || '',
+                    };
+                }).filter((item) => item.phimapi);
+                writeCache(cacheKey, items);
+                return items;
+            }
+
+            async function initData(options = {}) {
+                if (state.loading) return;
+                state.loading = true;
+                setStatus('loading', 'Đang tải thư viện anime', 'Vui lòng chờ trong giây lát.');
+                try {
+                    const query = getUrlParameter('q').trim();
+                    clearSearchBtn.hidden = !query;
+                    if (query) {
+                        state.mode = 'search';
+                        searchInput.value = query;
+                        filterContainer.hidden = true;
+                        sourcePill.textContent = `Kết quả tìm kiếm: ${query}`;
+                        state.images = await searchAnime(query);
+                    } else {
+                        state.mode = 'catalog';
+                        filterContainer.hidden = false;
+                        sourcePill.textContent = 'Thư viện chọn lọc';
+                        state.images = await fetchImageData(Boolean(options.forceRefresh));
+                        populateFilters();
+                    }
+                    displayImages();
+                } catch (error) {
+                    console.error(error);
+                    resultCount.textContent = '0 phim';
+                    setStatus('error', 'Không tải được dữ liệu anime', 'Nguồn dữ liệu đang bận hoặc kết nối bị chặn. Hãy thử lại sau ít phút.');
+                } finally {
+                    state.loading = false;
+                }
+            }
+
+            function updateQueryParam(query) {
+                const url = new URL(window.location.href);
+                if (query) {
+                    url.searchParams.set('q', query);
                 } else {
-                    const emailHash = md5(user.email.trim().toLowerCase());
-                    const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon&s=200`;
-                    userAvatar.src = gravatarUrl;
+                    url.searchParams.delete('q');
                 }
-                avatarBtn.style.display = "flex"
-                filterContainer.style.display = "flex"
-                initData()
-            });
-        });
-
-        document.addEventListener('click', function (event) {
-            if (avatarBtn.contains(event.target)) {
-                avatarDropdown.classList.toggle('show');
-            } else if (!avatarDropdown.contains(event.target)) {
-                avatarDropdown.classList.remove('show');
+                window.history.replaceState({}, '', url);
             }
-        });
-        document.getElementById('signOutBtnDropdown').onclick = function () {
-            if (window.firebase && firebase.auth) {
-                firebase.auth().signOut().then(function () {
-                    window.location.href = authUrl;
+
+            selectedCategory.addEventListener('change', displayImages);
+            selectedYear.addEventListener('change', displayImages);
+            selectedSeason.addEventListener('change', displayImages);
+            searchInput.addEventListener('input', () => {
+                if (state.mode === 'catalog') displayImages();
+            });
+            searchForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const query = searchInput.value.trim();
+                updateQueryParam(query);
+                await initData();
+            });
+            clearSearchBtn.addEventListener('click', async () => {
+                searchInput.value = '';
+                updateQueryParam('');
+                await initData();
+            });
+            refreshBtn.addEventListener('click', async () => {
+                await initData({ forceRefresh: true });
+            });
+            document.addEventListener('click', (event) => {
+                if (avatarBtn.contains(event.target)) {
+                    const shown = avatarDropdown.classList.toggle('show');
+                    avatarBtn.setAttribute('aria-expanded', String(shown));
+                } else if (!avatarDropdown.contains(event.target)) {
+                    avatarDropdown.classList.remove('show');
+                    avatarBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+            document.getElementById('signOutBtnDropdown').addEventListener('click', () => {
+                if (window.firebase?.auth) {
+                    firebase.auth().signOut().then(() => {
+                        window.location.href = authUrl;
+                    });
+                }
+            });
+
+            function bootWhenFirebaseReady() {
+                if (!window.firebase?.auth) {
+                    window.setTimeout(bootWhenFirebaseReady, 50);
+                    return;
+                }
+                firebase.auth().onAuthStateChanged(async (user) => {
+                    if (!user) {
+                        window.location.href = authUrl;
+                        return;
+                    }
+                    if (user.photoURL && window.location.hostname !== 'localhost') {
+                        userAvatar.src = user.photoURL;
+                    } else {
+                        userAvatar.src = '/anime/image/r3_128.png';
+                    }
+                    userMenu.hidden = false;
+                    await initData();
                 });
             }
-        };
+
+            bootWhenFirebaseReady();
+        });
     </script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1PSF8GWBEY"></script>
@@ -626,7 +1052,6 @@
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
-
         gtag('config', 'G-1PSF8GWBEY');
     </script>
 </body>
