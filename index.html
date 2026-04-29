@@ -849,10 +849,17 @@
                 return button;
             }
 
+            function getFirstEpisodeUrl(image) {
+                const episodes = parseEpisodes(image.episodes);
+                const firstEpisode = episodes.find(([, url]) => url);
+                if (firstEpisode) return firstEpisode[1];
+                return String(image.url || '').trim();
+            }
+
             function buildCardUrl(image) {
                 if (image.phimapi) return `/anime/artplayer/?k=${encodeURIComponent(image.phimapi)}`;
                 if (image.playlist) return `/anime/artplayer/?id=${encodeURIComponent(image.playlist)}`;
-                return '';
+                return getFirstEpisodeUrl(image);
             }
 
             function createAnimeCard(image, history, index) {
@@ -864,9 +871,12 @@
                 link.className = 'poster-link';
                 if (cardUrl) {
                     link.href = getAnimeUrl(cardUrl);
+                    if (isExternalPageUrl(cardUrl)) {
+                        link.title = 'Nguồn ngoài - mở trong khung xem của Tân Liên Hoa';
+                    }
                 } else {
                     link.classList.add('no-card-link');
-                    link.title = 'Chọn tập phía trên để xem. Phim này chưa có trang chi tiết nội bộ.';
+                    link.title = 'Phim này chưa có liên kết xem.';
                 }
 
                 const posterFrame = document.createElement('div');
