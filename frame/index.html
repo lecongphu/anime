@@ -1,46 +1,204 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Frame</title>
+    <meta name="theme-color" content="#070b10">
+    <title>Nguồn ngoài - Tân Liên Hoa Anime</title>
     <link rel="apple-touch-icon" href="/anime/image/r3_512.png">
     <link rel="icon" type="image/png" href="/anime/image/r3_512.png">
-    <meta property="og:image" content="/anime/image/r3.png">
+    <meta property="og:image" content="https://tanlienhoa.com/anime/image/r3.png">
     <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
+        :root {
+            --bar-h: 54px;
+            --bg: #070b10;
+            --panel: rgba(11, 17, 26, 0.94);
+            --line: rgba(255, 255, 255, 0.14);
+            --text: #f4f8ff;
+            --muted: #a6b5c8;
+            --accent: #44d7b6;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
             height: 100%;
+            margin: 0;
             overflow: hidden;
+            color: var(--text);
+            background: var(--bg);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .source-bar {
+            height: var(--bar-h);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel);
+        }
+
+        .source-title {
+            min-width: 0;
+            display: grid;
+            gap: 2px;
+        }
+
+        .source-title strong {
+            font-size: 0.92rem;
+        }
+
+        .source-title span {
+            max-width: min(64vw, 860px);
+            overflow: hidden;
+            color: var(--muted);
+            font-size: 0.74rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .actions {
+            display: flex;
+            flex: 0 0 auto;
+            gap: 8px;
+        }
+
+        .actions a,
+        .actions button {
+            min-height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .actions a {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .actions .primary {
+            color: #051016;
+            background: linear-gradient(135deg, var(--accent), #69b7ff);
         }
 
         iframe {
             width: 100%;
-            height: 100%;
-            border: none;
+            height: calc(100% - var(--bar-h));
+            display: block;
+            border: 0;
+            background: #000;
+        }
+
+        .empty {
+            height: calc(100% - var(--bar-h));
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --bar-h: 96px;
+            }
+
+            .source-bar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .source-title span {
+                max-width: 100%;
+            }
+
+            .actions a,
+            .actions button {
+                flex: 1 1 0;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 
 <body>
-    <iframe allowfullscreen sandbox="allow-same-origin allow-scripts" src="" frameborder="0" allowfullscreen="true"
-        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-        allowFullScreen="true"></iframe>
-</body>
-<script>
-    var url = window.location.href.split("#")[1]
-    document.querySelector("iframe").src = url;
-</script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1PSF8GWBEY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
+    <div class="source-bar">
+        <div class="source-title">
+            <strong>Nguồn ngoài</strong>
+            <span id="source-url">Đang tải...</span>
+        </div>
+        <div class="actions">
+            <button id="backBtn" type="button">Quay lại</button>
+            <a id="openSource" class="primary" href="#" target="_blank" rel="noopener noreferrer">Mở nguồn gốc</a>
+        </div>
+    </div>
+    <iframe
+        id="sourceFrame"
+        allowfullscreen
+        referrerpolicy="no-referrer-when-downgrade"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+    </iframe>
+    <div class="empty" id="emptyState" hidden>
+        Không có URL nguồn ngoài hợp lệ.
+    </div>
 
-    gtag('config', 'G-1PSF8GWBEY');
-</script>
+    <script>
+        function getSourceUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const encoded = params.get('u');
+            if (encoded) return encoded;
+            return window.location.hash ? window.location.hash.slice(1) : '';
+        }
+
+        const sourceUrl = getSourceUrl();
+        const frame = document.getElementById('sourceFrame');
+        const emptyState = document.getElementById('emptyState');
+        const sourceUrlNode = document.getElementById('source-url');
+        const openSource = document.getElementById('openSource');
+        const backBtn = document.getElementById('backBtn');
+
+        if (/^https?:\/\//i.test(sourceUrl)) {
+            sourceUrlNode.textContent = sourceUrl;
+            openSource.href = sourceUrl;
+            frame.src = sourceUrl;
+        } else {
+            frame.hidden = true;
+            openSource.hidden = true;
+            sourceUrlNode.textContent = 'URL không hợp lệ';
+            emptyState.hidden = false;
+        }
+
+        backBtn.addEventListener('click', () => {
+            if (window.history.length > 1) {
+                window.history.back();
+                return;
+            }
+            window.location.href = '/anime/';
+        });
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1PSF8GWBEY"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1PSF8GWBEY');
+    </script>
+</body>
 
 </html>

@@ -402,6 +402,16 @@
             border-color: rgba(68, 215, 182, 0.44);
         }
 
+        .anime-ep.external-source {
+            background: rgba(255, 183, 77, 0.2);
+            border-color: rgba(255, 183, 77, 0.42);
+        }
+
+        .anime-ep.disabled {
+            cursor: not-allowed;
+            opacity: 0.48;
+        }
+
         .anime-ep-text {
             color: inherit;
             font-size: 0.78rem;
@@ -764,8 +774,12 @@
                 if (raw.includes('facebook')) return `/anime/fb/?v=${encodeURIComponent(raw.split('=').pop() || raw)}`;
                 if (raw.includes('youtube') && raw.includes('?')) return `/anime/yt/?${raw.split('?')[1]}`;
                 if (!/^https?:\/\//i.test(raw)) return raw;
-                if (raw.includes('rophim')) return raw;
-                return `/anime/frame/#${raw}`;
+                return `/anime/frame/?u=${encodeURIComponent(raw)}`;
+            }
+
+            function isExternalPageUrl(url) {
+                const raw = String(url || '').trim();
+                return /^https?:\/\//i.test(raw) && !/\.(m3u8|mp4|json)(\?|#|$)/i.test(raw);
             }
 
             function parseEpisodes(value) {
@@ -798,6 +812,13 @@
                         link.href = getAnimeUrl(url);
                         link.target = '_blank';
                         link.rel = 'noopener noreferrer';
+                        if (isExternalPageUrl(url)) {
+                            link.classList.add('external-source');
+                            link.title = 'Nguồn ngoài - mở trong khung xem của Tân Liên Hoa';
+                        }
+                    } else {
+                        link.classList.add('disabled');
+                        link.setAttribute('aria-disabled', 'true');
                     }
                     const epText = document.createElement('span');
                     epText.className = `anime-ep-text${url && history[url] ? ' watched' : ''}`;
@@ -870,8 +891,19 @@
                     const episodes = parseEpisodes(image.episodes);
                     if (episodes.length) renderEpisodesPage(epBox, episodes, 0, history);
                 } else if (image.ep) {
-                    const badge = document.createElement('span');
+                    const badge = document.createElement(cardUrl ? 'a' : 'span');
                     badge.className = 'anime-ep';
+                    if (cardUrl) {
+                        badge.href = getAnimeUrl(cardUrl);
+                        badge.target = '_blank';
+                        badge.rel = 'noopener noreferrer';
+                        if (isExternalPageUrl(cardUrl)) {
+                            badge.classList.add('external-source');
+                            badge.title = 'Nguồn ngoài - mở trong khung xem của Tân Liên Hoa';
+                        }
+                    } else {
+                        badge.classList.add('disabled');
+                    }
                     const badgeText = document.createElement('span');
                     badgeText.className = 'anime-ep-text';
                     badgeText.textContent = image.ep;
