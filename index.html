@@ -61,6 +61,10 @@
             overflow-x: hidden;
         }
 
+        body.overlay-open {
+            overflow: hidden;
+        }
+
         body::before {
             content: "";
             position: fixed;
@@ -461,6 +465,86 @@
             color: var(--danger);
         }
 
+        .external-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            background: rgba(3, 7, 12, 0.96);
+        }
+
+        .external-overlay[hidden] {
+            display: none !important;
+        }
+
+        .external-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px clamp(12px, 3vw, 22px);
+            border-bottom: 1px solid var(--line);
+            background: rgba(10, 17, 26, 0.98);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+        }
+
+        .external-title {
+            min-width: 0;
+            display: grid;
+            gap: 3px;
+        }
+
+        .external-title strong {
+            font-size: 0.96rem;
+        }
+
+        .external-title span {
+            max-width: min(58vw, 860px);
+            overflow: hidden;
+            color: var(--muted);
+            font-size: 0.76rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .external-actions {
+            display: flex;
+            flex: 0 0 auto;
+            gap: 8px;
+        }
+
+        .external-actions a,
+        .external-actions button {
+            min-height: 38px;
+            padding: 0 14px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .external-actions a {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .external-actions .primary {
+            color: #061016;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        }
+
+        .external-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #000;
+        }
+
         @keyframes spin {
             to {
                 transform: rotate(360deg);
@@ -513,6 +597,21 @@
 
             .anime-meta {
                 font-size: 0.66rem;
+            }
+
+            .external-bar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .external-title span {
+                max-width: 100%;
+            }
+
+            .external-actions a,
+            .external-actions button {
+                flex: 1 1 0;
+                justify-content: center;
             }
 
             .anime-ep {
@@ -589,6 +688,27 @@
         </main>
     </div>
 
+    <div class="external-overlay" id="externalOverlay" hidden>
+        <div class="external-bar">
+            <div class="external-title">
+                <strong>Nguồn ngoài</strong>
+                <span id="externalSourceUrl">Đang tải...</span>
+            </div>
+            <div class="external-actions">
+                <button id="closeExternalOverlay" type="button">Đóng</button>
+                <a id="openExternalSource" class="primary" href="#" target="_blank" rel="noopener noreferrer">Mở nguồn gốc</a>
+            </div>
+        </div>
+        <iframe
+            class="external-frame"
+            id="externalFrame"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const SHEET_ID = '12q04f4hwtVQjfVSUayDsgXLGGbqrl9urm8gp556nPQA';
@@ -612,6 +732,11 @@
             const searchInput = document.getElementById('search-input');
             const clearSearchBtn = document.getElementById('clearSearchBtn');
             const refreshBtn = document.getElementById('refreshBtn');
+            const externalOverlay = document.getElementById('externalOverlay');
+            const externalFrame = document.getElementById('externalFrame');
+            const externalSourceUrl = document.getElementById('externalSourceUrl');
+            const openExternalSource = document.getElementById('openExternalSource');
+            const closeExternalOverlay = document.getElementById('closeExternalOverlay');
 
             const state = {
                 images: [],
@@ -786,6 +911,29 @@
                 return /^https?:\/\//i.test(raw) && !/\.(m3u8|mp4|json)(\?|#|$)/i.test(raw);
             }
 
+            function markExternalTrigger(element, url) {
+                element.dataset.externalUrl = url;
+                element.classList.add('external-source');
+                element.title = 'Nguồn ngoài - mở ngay trên trang Tân Liên Hoa';
+            }
+
+            function openExternalOverlay(url) {
+                const raw = String(url || '').trim();
+                if (!/^https?:\/\//i.test(raw)) return;
+                externalSourceUrl.textContent = raw;
+                openExternalSource.href = raw;
+                externalFrame.src = raw;
+                externalOverlay.hidden = false;
+                document.body.classList.add('overlay-open');
+                closeExternalOverlay.focus();
+            }
+
+            function closeOverlay() {
+                externalOverlay.hidden = true;
+                externalFrame.src = 'about:blank';
+                document.body.classList.remove('overlay-open');
+            }
+
             function parseEpisodes(value) {
                 return String(value || '')
                     .split('\n')
@@ -817,8 +965,7 @@
                         link.target = '_blank';
                         link.rel = 'noopener noreferrer';
                         if (isExternalPageUrl(url)) {
-                            link.classList.add('external-source');
-                            link.title = 'Nguồn ngoài - mở trong khung xem của Tân Liên Hoa';
+                            markExternalTrigger(link, url);
                         }
                     } else {
                         link.classList.add('disabled');
@@ -872,7 +1019,7 @@
                 if (cardUrl) {
                     link.href = getAnimeUrl(cardUrl);
                     if (isExternalPageUrl(cardUrl)) {
-                        link.title = 'Nguồn ngoài - mở trong khung xem của Tân Liên Hoa';
+                        markExternalTrigger(link, cardUrl);
                     }
                 } else {
                     link.classList.add('no-card-link');
@@ -917,8 +1064,7 @@
                         badge.target = '_blank';
                         badge.rel = 'noopener noreferrer';
                         if (isExternalPageUrl(cardUrl)) {
-                            badge.classList.add('external-source');
-                            badge.title = 'Nguồn ngoài - mở trong khung xem của Tân Liên Hoa';
+                            markExternalTrigger(badge, cardUrl);
                         }
                     } else {
                         badge.classList.add('disabled');
@@ -1057,7 +1203,20 @@
             refreshBtn.addEventListener('click', async () => {
                 await initData({ forceRefresh: true });
             });
+            closeExternalOverlay.addEventListener('click', closeOverlay);
+            externalOverlay.addEventListener('click', (event) => {
+                if (event.target === externalOverlay) closeOverlay();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !externalOverlay.hidden) closeOverlay();
+            });
             document.addEventListener('click', (event) => {
+                const externalTrigger = event.target.closest('[data-external-url]');
+                if (externalTrigger) {
+                    event.preventDefault();
+                    openExternalOverlay(externalTrigger.dataset.externalUrl);
+                    return;
+                }
                 if (avatarBtn.contains(event.target)) {
                     const shown = avatarDropdown.classList.toggle('show');
                     avatarBtn.setAttribute('aria-expanded', String(shown));
